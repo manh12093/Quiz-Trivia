@@ -1,0 +1,8 @@
+{
+  "name": "chinh-phuc-online",
+  "version": "1.0.0",
+  "description": "Chinh Phục - Ma Trận Tri Thức: phòng chơi trực tuyến có mã trận + mật khẩu",
+  "main": "server.js",
+  "scripts": { "start": "node server.js" },
+  "engines": { "node": ">=18" }
+}
