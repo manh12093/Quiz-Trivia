@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chinh Phục Online - Ma Trận Tri Thức</title>
+<link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&family=Montserrat:wght@800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#060a17;--card:rgba(11,16,33,.92);--ink:#f3f4f6;--gold:#FFD700;--line:rgba(255,215,0,.3);--mut:#9ca3af}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:20px;background:var(--bg) radial-gradient(circle at 50% 0,rgba(212,175,55,.2),transparent 55%);color:var(--ink);font-family:'Be Vietnam Pro',sans-serif}
+h1{font:900 clamp(22px,5vw,36px) Montserrat,sans-serif;margin:0;text-align:center;text-transform:uppercase;background:linear-gradient(135deg,#FFF8C6,#FFD700 40%,#F39C12);-webkit-background-clip:text;color:transparent}
+p.sub{margin:4px 0 0;text-align:center;color:#fcd34d;letter-spacing:.15em;font-size:12px;text-transform:uppercase}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(290px,1fr));gap:18px;width:100%;max-width:760px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px;box-shadow:0 0 30px rgba(255,215,0,.08)}
+.card h2{margin:0 0 4px;font:800 18px Montserrat,sans-serif;color:#fde68a}
+.card small{color:var(--mut);display:block;margin-bottom:14px}
+label{display:block;font-size:12px;font-weight:700;color:#fcd34d;margin:10px 0 4px}
+input{width:100%;padding:11px 12px;border-radius:12px;border:1px solid var(--line);background:#000a;color:#fff;font:600 14px inherit}
+input:focus{outline:2px solid var(--gold)}
+button{width:100%;margin-top:16px;padding:12px;border:0;border-radius:12px;cursor:pointer;font:800 13px inherit;letter-spacing:.05em;background:linear-gradient(135deg,#FFD700,#F39C12,#B8860B);color:#000}
+button:disabled{opacity:.5}
+.err{min-height:18px;margin-top:10px;color:#f87171;font-size:12px;font-weight:600}
+</style>
+</head>
+<body>
+<div><h1>Chinh Phục - Ma Trận Tri Thức</h1><p class="sub">Sân chơi trực tuyến nhiều người</p></div>
+<div class="grid">
+  <form class="card" id="f-create">
+    <h2>🎤 Tôi là MC</h2><small>Tạo phòng mới, chia sẻ mã trận + mật khẩu cho thí sinh.</small>
+    <label>Mã trận (tùy chọn, 4–10 ký tự; để trống sẽ tự tạo)</label><input id="c-code" maxlength="10" placeholder="VD: LOP12A" autocomplete="off">
+    <label>Mật khẩu phòng (tối thiểu 4 ký tự)</label><input id="c-pass" type="text" maxlength="40" autocomplete="off">
+    <button>TẠO PHÒNG</button><div class="err" id="c-err"></div>
+  </form>
+  <form class="card" id="f-join">
+    <h2>🔔 Tôi là thí sinh</h2><small>Nhập mã trận và mật khẩu do MC cung cấp.</small>
+    <label>Mã trận</label><input id="j-code" maxlength="10" required autocomplete="off">
+    <label>Mật khẩu</label><input id="j-pass" type="password" required autocomplete="off">
+    <label>Tên hiển thị</label><input id="j-name" maxlength="24" required autocomplete="off">
+    <button>VÀO PHÒNG</button><div class="err" id="j-err"></div>
+  </form>
+</div>
+<script>
+const $ = id => document.getElementById(id);
+const post = (u, o) => fetch(u, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(o) }).then(async r => { const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Có lỗi xảy ra.'); return d; });
+const go = (f, errEl, fn) => f.onsubmit = async e => { e.preventDefault(); const b = f.querySelector('button'); b.disabled = true; errEl.textContent = ''; try { await fn(); } catch (x) { errEl.textContent = x.message; b.disabled = false; } };
+$('j-code').value = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
+$('j-name').value = localStorage.getItem('cp_name') || '';
+go($('f-create'), $('c-err'), async () => {
+  const password = $('c-pass').value, d = await post('/api/rooms', { code: $('c-code').value, password });
+  sessionStorage.setItem('cp_session', JSON.stringify({ role: 'host', code: d.code, token: d.token, password }));
+  location.href = '/host.html';
+});
+go($('f-join'), $('j-err'), async () => {
+  const code = $('j-code').value.trim().toUpperCase(), name = $('j-name').value.trim(), d = await post('/api/join', { code, password: $('j-pass').value, name });
+  localStorage.setItem('cp_name', name);
+  sessionStorage.setItem('cp_session', JSON.stringify({ role: 'player', code, token: d.token, name }));
+  location.href = '/play.html';
+});
+</script>
+</body>
+</html>
